@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Finder | PokéAPI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center p-4">
+
+    <div class="w-full max-w-2xl">
+        
+        <div class="text-center mb-8 animate-fadeIn">
+            <h1 class="text-5xl md:text-6xl font-bold text-white mb-2 drop-shadow-lg">
+                Pokémon Finder
+            </h1>
+            <p class="text-white text-lg opacity-90">Search for any Pokémon by name or ID</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 mb-6">
+            <div class="flex flex-col md:flex-row gap-4">
+                <input 
+                    type="text" 
+                    id="pokemonInput"
+                    placeholder="Enter Pokémon name or ID..."
+                    class="flex-1 px-6 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all text-lg"
+                />
+                <button 
+                    id="searchBtn"
+                    class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                    Search
+                </button>
+            </div>
+
+            <div class="flex items-center justify-center gap-3 mt-6">
+                <span class="text-gray-600 font-medium">Dark Mode</span>
+                <button 
+                    id="darkModeToggle"
+                    class="w-14 h-8 bg-gray-300 rounded-full relative transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                >
+                    <span class="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300"></span>
+                </button>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="hidden bg-white rounded-2xl shadow-2xl p-12 text-center">
+            <div class="flex flex-col items-center justify-center">
+                <div class="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="text-gray-600 font-semibold text-lg">Loading Pokémon...</p>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="hidden bg-red-100 border-2 border-red-400 rounded-2xl shadow-lg p-6 text-center">
+            <div class="text-red-600 text-6xl mb-4">⚠️</div>
+            <h3 class="text-red-800 font-bold text-xl mb-2">Pokémon Not Found!</h3>
+            <p class="text-red-600" id="errorText">Please try another name or ID.</p>
+        </div>
+
+        <div id="pokemonCard" class="hidden bg-white rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+            
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 p-6 text-center">
+                <h2 id="pokemonName" class="text-4xl font-bold text-white mb-2"></h2>
+                <p id="pokemonId" class="text-white text-xl opacity-90"></p>
+            </div>
+
+            <div class="p-6 md:p-8">
+                
+                <div id="pokemonImages" class="flex justify-center gap-4 mb-6 flex-wrap">
+                   
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-xl p-4 text-center">
+                        <p class="text-gray-600 text-sm mb-1">Height</p>
+                        <p id="pokemonHeight" class="text-2xl font-bold text-blue-600"></p>
+                    </div>
+                    <div class="bg-green-50 rounded-xl p-4 text-center">
+                        <p class="text-gray-600 text-sm mb-1">Weight</p>
+                        <p id="pokemonWeight" class="text-2xl font-bold text-green-600"></p>
+                    </div>
+                    <div class="bg-purple-50 rounded-xl p-4 text-center col-span-2 md:col-span-1">
+                        <p class="text-gray-600 text-sm mb-1">Base Experience</p>
+                        <p id="pokemonExperience" class="text-2xl font-bold text-purple-600"></p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="text-gray-700 font-semibold mb-3 text-lg">Types</h3>
+                    <div id="pokemonTypes" class="flex gap-3 flex-wrap">
+                       
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="text-center mt-8 text-white opacity-75">
+            <p>Powered by <a href="https://pokeapi.co" target="_blank" class="underline hover:opacity-100 transition-opacity">PokéAPI</a></p>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
