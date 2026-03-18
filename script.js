@@ -1,11 +1,14 @@
-
 const pokemonInput = document.querySelector('#pokemonInput');
 const searchBtn = document.querySelector('#searchBtn');
+const randomBtn = document.querySelector('#randomBtn');
 const loadingIndicator = document.querySelector('#loadingIndicator');
 const errorMessage = document.querySelector('#errorMessage');
 const errorText = document.querySelector('#errorText');
 const pokemonCard = document.querySelector('#pokemonCard');
 const darkModeToggle = document.querySelector('#darkModeToggle');
+const recentSearches = document.querySelector('#recentSearches');
+const clearHistoryBtn = document.querySelector('#clearHistoryBtn');
+const historyEmptyState = document.querySelector('#historyEmptyState');
 
 const pokemonName = document.querySelector('#pokemonName');
 const pokemonId = document.querySelector('#pokemonId');
@@ -15,61 +18,46 @@ const pokemonWeight = document.querySelector('#pokemonWeight');
 const pokemonExperience = document.querySelector('#pokemonExperience');
 const pokemonTypes = document.querySelector('#pokemonTypes');
 
-let isDarkMode = false;
+const HISTORY_STORAGE_KEY = 'pokemonFinderRecentSearches';
+const THEME_STORAGE_KEY = 'pokemonFinderDarkMode';
+const MAX_RECENT_SEARCHES = 6;
 
-darkModeToggle.addEventListener('click', () => {
-    isDarkMode = !isDarkMode;
-    
+let isDarkMode = false;
+let recentSearchHistory = [];
+
+function applyTheme() {
+    const toggleKnob = darkModeToggle.querySelector('span');
+
     if (isDarkMode) {
         document.body.classList.add('bg-gray-900');
         document.body.classList.remove('bg-gradient-to-br', 'from-blue-400', 'via-purple-500', 'to-pink-500');
         darkModeToggle.classList.add('bg-purple-600');
         darkModeToggle.classList.remove('bg-gray-300');
-        darkModeToggle.querySelector('span').classList.add('translate-x-6');
-    } else {
-        document.body.classList.remove('bg-gray-900');
-        document.body.classList.add('bg-gradient-to-br', 'from-blue-400', 'via-purple-500', 'to-pink-500');
-        darkModeToggle.classList.remove('bg-purple-600');
-        darkModeToggle.classList.add('bg-gray-300');
-        darkModeToggle.querySelector('span').classList.remove('translate-x-6');
+        toggleKnob.classList.add('translate-x-6');
+        return;
     }
-});
 
+    document.body.classList.remove('bg-gray-900');
+    document.body.classList.add('bg-gradient-to-br', 'from-blue-400', 'via-purple-500', 'to-pink-500');
+    darkModeToggle.classList.remove('bg-purple-600');
+    darkModeToggle.classList.add('bg-gray-300');
+    toggleKnob.classList.remove('translate-x-6');
+}
 
-/**
- * Capitalize first letter of a string
- * @param {string} str - String to capitalize
- * @returns {string} - Capitalized string
- */
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-/**
- * Convert decimeters to meters
- * @param {number} decimeters - Height in decimeters
- * @returns {string} - Height in meters with unit
- */
 function convertHeight(decimeters) {
     const meters = (decimeters / 10).toFixed(2);
     return `${meters} m`;
 }
 
-/**
- * Convert hectograms to kilograms
- * @param {number} hectograms - Weight in hectograms
- * @returns {string} - Weight in kilograms with unit
- */
 function convertWeight(hectograms) {
     const kilograms = (hectograms / 10).toFixed(2);
     return `${kilograms} kg`;
 }
 
-/**
- * Get type color for styling
- * @param {string} type - Pokemon type
- * @returns {string} - Tailwind color classes
- */
 function getTypeColor(type) {
     const typeColors = {
         normal: 'bg-gray-400',
@@ -91,6 +79,7 @@ function getTypeColor(type) {
         steel: 'bg-gray-500',
         fairy: 'bg-pink-300'
     };
+
     return typeColors[type] || 'bg-gray-400';
 }
 
@@ -102,21 +91,87 @@ function hideElement(element) {
     element.classList.add('hidden');
 }
 
+function loadRecentSearches() {
+    const storedSearches = localStorage.getItem(HISTORY_STORAGE_KEY);
+
+    if (!storedSearches) {
+        recentSearchHistory = [];
+        return;
+    }
+
+    try {
+        recentSearchHistory = JSON.parse(storedSearches);
+    } catch (error) {
+        console.error('Unable to parse recent searches:', error);
+        recentSearchHistory = [];
+    }
+}
+
+function saveRecentSearches() {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(recentSearchHistory));
+}
+
+function renderRecentSearches() {
+    recentSearches.innerHTML = '';
+
+    if (recentSearchHistory.length === 0) {
+        recentSearches.appendChild(historyEmptyState);
+        showElement(historyEmptyState);
+        hideElement(clearHistoryBtn);
+        return;
+    }
+
+    hideElement(historyEmptyState);
+    showElement(clearHistoryBtn);
+
+    recentSearchHistory.forEach((searchTerm) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.textContent = capitalize(searchTerm);
+        chip.classList.add(
+            'px-3',
+            'py-2',
+            'rounded-full',
+            'bg-purple-100',
+            'text-purple-700',
+            'text-sm',
+            'font-medium',
+            'hover:bg-purple-200',
+            'transition-colors'
+        );
+        chip.addEventListener('click', () => {
+            pokemonInput.value = searchTerm;
+            fetchPokemon(searchTerm);
+        });
+
+        recentSearches.appendChild(chip);
+    });
+}
+
+function updateRecentSearches(searchTerm) {
+    const normalizedSearch = searchTerm.toLowerCase();
+    recentSearchHistory = recentSearchHistory.filter((item) => item !== normalizedSearch);
+    recentSearchHistory.unshift(normalizedSearch);
+    recentSearchHistory = recentSearchHistory.slice(0, MAX_RECENT_SEARCHES);
+    saveRecentSearches();
+    renderRecentSearches();
+}
+
 function showLoading() {
     hideElement(pokemonCard);
     hideElement(errorMessage);
     showElement(loadingIndicator);
     searchBtn.disabled = true;
     searchBtn.textContent = 'Searching...';
+    randomBtn.disabled = true;
 }
-
 
 function hideLoading() {
     hideElement(loadingIndicator);
     searchBtn.disabled = false;
     searchBtn.textContent = 'Search';
+    randomBtn.disabled = false;
 }
-
 
 function showError(message) {
     hideLoading();
@@ -124,7 +179,6 @@ function showError(message) {
     errorText.textContent = message;
     showElement(errorMessage);
 }
-
 
 function displayPokemon(data) {
     hideLoading();
@@ -134,7 +188,7 @@ function displayPokemon(data) {
     pokemonId.textContent = `#${String(data.id).padStart(3, '0')}`;
 
     pokemonImages.innerHTML = '';
-    
+
     const imageUrls = [
         { url: data.sprites.front_default, label: 'Front' },
         { url: data.sprites.back_default, label: 'Back' },
@@ -167,53 +221,60 @@ function displayPokemon(data) {
     pokemonExperience.textContent = data.base_experience;
 
     pokemonTypes.innerHTML = '';
-    data.types.map(typeInfo => {
+    data.types.forEach((typeInfo) => {
         const typeElement = document.createElement('span');
         typeElement.textContent = capitalize(typeInfo.type.name);
-        
-        const colorClass = getTypeColor(typeInfo.type.name);
         typeElement.classList.add(
-            'px-4', 
-            'py-2', 
-            'rounded-full', 
-            'text-white', 
-            'font-semibold', 
+            'px-4',
+            'py-2',
+            'rounded-full',
+            'text-white',
+            'font-semibold',
             'text-sm',
-            colorClass
+            getTypeColor(typeInfo.type.name)
         );
-        
         pokemonTypes.appendChild(typeElement);
     });
 
     showElement(pokemonCard);
 }
 
+function getRandomPokemonId() {
+    return Math.floor(Math.random() * 1025) + 1;
+}
 
+function submitSearch(searchTerm) {
+    const input = searchTerm.trim();
+
+    if (input === '') {
+        showError('Please enter a PokÃ©mon name or ID!');
+        return;
+    }
+
+    fetchPokemon(input);
+}
 
 async function fetchPokemon(nameOrId) {
-
     showLoading();
 
     try {
-        
         const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${nameOrId.toLowerCase()}`);
 
         if (!response.ok) {
             if (response.status === 404) {
-                throw new Error('Pokémon not found! Please check the name or ID and try again.');
+                throw new Error('PokÃ©mon not found! Please check the name or ID and try again.');
             }
+
             throw new Error(`HTTP Error: ${response.status}`);
         }
 
         const data = await response.json();
-
         displayPokemon(data);
-
+        updateRecentSearches(nameOrId);
     } catch (error) {
-       s
         console.error('Error fetching Pokemon:', error);
-        
-        if (error.message.includes('Pokémon not found')) {
+
+        if (error.message.includes('PokÃ©mon not found')) {
             showError(error.message);
         } else if (error.message.includes('Failed to fetch')) {
             showError('Network error! Please check your internet connection.');
@@ -223,30 +284,38 @@ async function fetchPokemon(nameOrId) {
     }
 }
 
-searchBtn.addEventListener('click', () => {
-    const input = pokemonInput.value.trim();
-    
-    if (input === '') {
-        showError('Please enter a Pokémon name or ID!');
-        return;
-    }
-    
-    fetchPokemon(input);
+darkModeToggle.addEventListener('click', () => {
+    isDarkMode = !isDarkMode;
+    localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(isDarkMode));
+    applyTheme();
 });
 
-pokemonInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        const input = pokemonInput.value.trim();
-        
-        if (input === '') {
-            showError('Please enter a Pokémon name or ID!');
-            return;
-        }
-        
-        fetchPokemon(input);
+searchBtn.addEventListener('click', () => {
+    submitSearch(pokemonInput.value);
+});
+
+randomBtn.addEventListener('click', () => {
+    const randomId = String(getRandomPokemonId());
+    pokemonInput.value = randomId;
+    fetchPokemon(randomId);
+});
+
+clearHistoryBtn.addEventListener('click', () => {
+    recentSearchHistory = [];
+    saveRecentSearches();
+    renderRecentSearches();
+});
+
+pokemonInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+        submitSearch(pokemonInput.value);
     }
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+    isDarkMode = JSON.parse(localStorage.getItem(THEME_STORAGE_KEY) || 'false');
+    applyTheme();
+    loadRecentSearches();
+    renderRecentSearches();
     fetchPokemon('pikachu');
 });
