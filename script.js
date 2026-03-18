@@ -94,9 +94,6 @@ function getTypeColor(type) {
     return typeColors[type] || 'bg-gray-400';
 }
 
-/**
- * Show/hide elements
- */
 function showElement(element) {
     element.classList.remove('hidden');
 }
@@ -105,9 +102,6 @@ function hideElement(element) {
     element.classList.add('hidden');
 }
 
-/**
- * Display loading state
- */
 function showLoading() {
     hideElement(pokemonCard);
     hideElement(errorMessage);
@@ -116,19 +110,14 @@ function showLoading() {
     searchBtn.textContent = 'Searching...';
 }
 
-/**
- * Hide loading state
- */
+
 function hideLoading() {
     hideElement(loadingIndicator);
     searchBtn.disabled = false;
     searchBtn.textContent = 'Search';
 }
 
-/**
- * Display error message
- * @param {string} message - Error message to display
- */
+
 function showError(message) {
     hideLoading();
     hideElement(pokemonCard);
@@ -136,10 +125,7 @@ function showError(message) {
     showElement(errorMessage);
 }
 
-/**
- * Display Pokemon data
- * @param {object} data - Pokemon data from API
- */
+
 function displayPokemon(data) {
     hideLoading();
     hideElement(errorMessage);
@@ -203,10 +189,7 @@ function displayPokemon(data) {
 }
 
 
-/**
- * Fetch Pokemon data from PokeAPI
- * @param {string} nameOrId - Pokemon name or ID
- */
+
 async function fetchPokemon(nameOrId) {
 
     showLoading();
