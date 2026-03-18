@@ -247,7 +247,7 @@ function submitSearch(searchTerm) {
     const input = searchTerm.trim();
 
     if (input === '') {
-        showError('Please enter a PokÃ©mon name or ID!');
+        showError('Please enter a Pokemon name or ID!');
         return;
     }
 
@@ -262,7 +262,7 @@ async function fetchPokemon(nameOrId) {
 
         if (!response.ok) {
             if (response.status === 404) {
-                throw new Error('PokÃ©mon not found! Please check the name or ID and try again.');
+                throw new Error('Pokemon not found! Please check the name or ID and try again.');
             }
 
             throw new Error(`HTTP Error: ${response.status}`);
@@ -274,7 +274,7 @@ async function fetchPokemon(nameOrId) {
     } catch (error) {
         console.error('Error fetching Pokemon:', error);
 
-        if (error.message.includes('PokÃ©mon not found')) {
+        if (error.message.includes('Pokemon not found')) {
             showError(error.message);
         } else if (error.message.includes('Failed to fetch')) {
             showError('Network error! Please check your internet connection.');
@@ -306,7 +306,7 @@ clearHistoryBtn.addEventListener('click', () => {
     renderRecentSearches();
 });
 
-pokemonInput.addEventListener('keypress', (event) => {
+pokemonInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
         submitSearch(pokemonInput.value);
     }
